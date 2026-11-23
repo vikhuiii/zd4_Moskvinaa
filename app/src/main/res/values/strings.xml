@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">zd4_Moskvinav2</string>
+    <string name="title">TITLE</string>
+    <string name="text2">Enter a title for the crime</string>
+    <string name="text3">DETAILS</string>
+    <string name="text4">SAT MAR 09 14:37:05 EST 2019</string>
+    <string name="text5">Solved</string>
+    <string name="text6">CHOOSE SUSPECT</string>
+    <string name="text7">SEND CRIME REPORT</string>
+
+
+    <string name="solved">The case is solved</string>
+    <string name="nosolved">The case is not solved</string>
+    <string name="nosuspect">there is no suspect</string>
+    <string name="suspect">the suspect is %s</string>
+    <string name="sendreport">Send crime</string>
+    <string name="chosnumber">Chose number</string>
+    <string name="t">Выбрать подозреваемого</string>
+    <string name="t2">Позвонить подозреваемому</string>
+    <string name="t3">Нет номера телефона</string>
+
+
+    <string name="crime_1">Scooter stolen while going to the restroom</string>
+    <string name="date_1">Mon Nov 05 00:00:00 EST 2018</string>
+    <string name="crime_2">Paper clip Ponzi scheme</string>
+    <string name="date_2">Thu Oct 11 00:00:00 EDT 2018</string>
+    <string name="crime_3">Fragment fraud</string>
+    <string name="date_3">Fri Dec 21 00:00:00 EST 2018</string>
+    <string name="crime_4">Popcorn left unattended, microwave on fire</string>
+    <string name="date_4">Thu Jan 24 00:00:00 EST 2019</string>
+    <string name="crime_5">Coffee cup thief!</string>
+    <string name="date_5">Wed Nov 14 00:00:00 EST 2018</string>
+</resources>
