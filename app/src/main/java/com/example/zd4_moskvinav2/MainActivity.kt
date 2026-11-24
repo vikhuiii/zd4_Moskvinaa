@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var ettitles: EditText
     private lateinit var CheckBoxs: CheckBox
     private lateinit var pref : SharedPreferences
+    private lateinit var btnSaveCrime: Button
     private var pendingContactUri: Uri? = null
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -68,6 +69,7 @@ class MainActivity : AppCompatActivity() {
         btnSendReport = findViewById(R.id.crime_send_report)
         btnDate = findViewById(R.id.dates)
         ettitles = findViewById(R.id.titles)
+        btnSaveCrime = findViewById(R.id.btn_save_crime)
         if (crimeId == -1L) {
             Toast.makeText(this, "Ошибка: преступление не выбрано", Toast.LENGTH_SHORT).show()
             finish()
@@ -108,6 +110,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        btnSaveCrime.setOnClickListener { setupSaveButton() }
     }
     private fun loadCrime(initialTitle: String, initialDate: String) {
         lifecycleScope.launch {
@@ -231,5 +234,20 @@ class MainActivity : AppCompatActivity() {
     }
     companion object {
         const val EXTRA_CRIME_ID = "com.bignerdranch.android.criminalintent.crime_id"
+    }
+    private fun setupSaveButton() {
+        btnSaveCrime.setOnClickListener {
+            crime.title = ettitles.text.toString()
+            crime.date = btnDate.text.toString()
+            crime.isSolved = CheckBoxs.isChecked
+
+            lifecycleScope.launch {
+                withContext(Dispatchers.IO) {
+                    crimeRepository.updateCrime(crime)
+                }
+                Toast.makeText(this@MainActivity, "Сохранено!", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
     }
 }

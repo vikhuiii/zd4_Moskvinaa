@@ -1,80 +1,125 @@
 package com.example.zd4_moskvinav2
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import android.widget.LinearLayout
+import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class Crimes: AppCompatActivity() {
+class Crimes : AppCompatActivity() {
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: CrimeAdapter
+    private lateinit var tvEmptyState: TextView
+    private lateinit var btnAddCrime: Button
+    private lateinit var crimeDao: CrimeDao
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_crimes)
-        val h = CrimeDataBase.getInstance(this).crimeDao()
 
-            lifecycleScope.launch {
-                val crimes = withContext(Dispatchers.IO) {
-                    h.getAllCrimes()
-                }
+        crimeDao = CrimeDataBase.getInstance(this).crimeDao()
 
-                if (crimes.isEmpty()) {
-                    findViewById<LinearLayout>(R.id.crime_list_container).visibility = View.GONE
-                    findViewById<TextView>(R.id.empty_message).visibility = View.VISIBLE
-                    findViewById<Button>(R.id.btn_add_crime).visibility = View.VISIBLE
-                } else {
-                    findViewById<LinearLayout>(R.id.crime_list_container).visibility = View.VISIBLE
-                    findViewById<TextView>(R.id.empty_message).visibility = View.GONE
-                    findViewById<Button>(R.id.btn_add_crime).visibility = View.GONE
+        recyclerView = findViewById(R.id.recycler_view_crimes)
+        tvEmptyState = findViewById(R.id.tv_empty_state)
+        btnAddCrime = findViewById(R.id.btn_add_crime)
 
-                    findViewById<LinearLayout>(R.id.crime1).setOnClickListener {
-                        openDetail(crimes[0].id, crimes[0].title, crimes[0].date)
-                    }
-                    findViewById<LinearLayout>(R.id.crime2).setOnClickListener {
-                        openDetail(crimes[0].id, crimes[0].title, crimes[0].date)
-                    }
-                    findViewById<LinearLayout>(R.id.crime3).setOnClickListener {
-                        openDetail(crimes[0].id, crimes[0].title, crimes[0].date)
-                    }
-                    findViewById<LinearLayout>(R.id.crime4).setOnClickListener {
-                        openDetail(crimes[0].id, crimes[0].title, crimes[0].date)
-                    }
-                    findViewById<LinearLayout>(R.id.crime5).setOnClickListener {
-                        openDetail(crimes[0].id, crimes[0].title, crimes[0].date)
-                    }
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        adapter = CrimeAdapter { crime ->
+            openDetail(crime.id, crime.title, crime.date)
+        }
+        recyclerView.adapter = adapter
 
-                }
+        loadCrimes()
+
+        btnAddCrime.setOnClickListener {
+            showAddCrimeDialog()
+        }
+    }
+
+    private fun loadCrimes() {
+        lifecycleScope.launch {
+            val crimes = withContext(Dispatchers.IO) {
+                crimeDao.getAllCrimes()
             }
 
-            findViewById<Button>(R.id.btn_add_crime).setOnClickListener {
+            if (crimes.isEmpty()) {
+                recyclerView.visibility = View.GONE
+                tvEmptyState.visibility = View.VISIBLE
+            } else {
+                recyclerView.visibility = View.VISIBLE
+                tvEmptyState.visibility = View.GONE
+                adapter.submitList(crimes)
+            }
+        }
+    }
+
+    private fun showAddCrimeDialog() {
+        val inputTitle = EditText(this).apply { hint = "Название преступления" }
+        val inputDate = EditText(this).apply {
+            hint = "Дата (например, 25.11.2026)"
+            setText(SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date()))
+        }
+
+        val layout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(50, 40, 50, 10)
+            addView(inputTitle)
+            addView(inputDate)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Новое преступление")
+            .setView(layout)
+            .setPositiveButton("Создать") { _, _ ->
+                val title = inputTitle.text.toString().trim()
+                val date = inputDate.text.toString().trim()
+
+                if (title.isEmpty()) {
+                    Toast.makeText(this, "Введите название!", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
                 lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         val newCrime = Crime(
                             id = System.currentTimeMillis(),
-                            title = "Новое преступление",
-                            date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()),
+                            title = title,
+                            date = date,
                             isSolved = false,
                             suspect = "",
                             suspectPhone = ""
                         )
-                        h.addCrime(newCrime)
+                        crimeDao.addCrime(newCrime)
                     }
-                    recreate()
+                    loadCrimes()
                 }
             }
-        }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
 
-    private fun openDetail(index: Long, title: String, date: String) {
-        val pref = getSharedPreferences("crime", Context.MODE_PRIVATE)
-        pref.edit().putLong(MainActivity.EXTRA_CRIME_ID, index)
+    private fun openDetail(id: Long, title: String, date: String) {
+        val pref = getSharedPreferences("crime", MODE_PRIVATE)
+        pref.edit()
+            .putLong(MainActivity.EXTRA_CRIME_ID, id)
             .putString("title", title)
-            .putString("date", date).apply()
+            .putString("date", date)
+            .apply()
+
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
     }
