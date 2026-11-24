@@ -3,6 +3,7 @@ package com.example.zd4_moskvinav2
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -14,6 +15,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
@@ -21,6 +23,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.Manifest
 
 class MainActivity : AppCompatActivity() {
     private var crimeId: Long = -1
@@ -33,6 +36,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var ettitles: EditText
     private lateinit var CheckBoxs: CheckBox
     private lateinit var pref : SharedPreferences
+    private var pendingContactUri: Uri? = null
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            pendingContactUri?.let { uri ->
+                processContactData(uri)
+            }
+        } else {
+            Toast.makeText(this, "Без разрешения нельзя прочитать номер телефона", Toast.LENGTH_SHORT).show()
+            pendingContactUri = null
+        }
+    }
     private val pickContactLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -131,8 +147,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun processContactSelection(contactUri: Uri) {
 
+    private fun processContactSelection(contactUri: Uri) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)
+            == PackageManager.PERMISSION_GRANTED) {
+            processContactData(contactUri)
+        } else {
+            pendingContactUri = contactUri
+            requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+        }
+    }
+    private fun processContactData(contactUri: Uri) {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 val queryFields = arrayOf(
@@ -142,8 +167,8 @@ class MainActivity : AppCompatActivity() {
 
                 contentResolver.query(contactUri, queryFields, null, null, null)?.use { cursor ->
                     if (cursor.count == 0) return@use
-
                     cursor.moveToFirst()
+
                     val suspectName = cursor.getString(
                         cursor.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME)
                     )
@@ -160,7 +185,6 @@ class MainActivity : AppCompatActivity() {
                         arrayOf(contactId),
                         null
                     )
-
                     phoneCursor?.use { pCursor ->
                         if (pCursor.count > 0) {
                             pCursor.moveToFirst()
