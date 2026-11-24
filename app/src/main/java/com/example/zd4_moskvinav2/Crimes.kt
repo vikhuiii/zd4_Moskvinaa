@@ -3,7 +3,10 @@ package com.example.zd4_moskvinav2
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -15,33 +18,58 @@ class Crimes: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_crimes)
         val h = CrimeDataBase.getInstance(this).crimeDao()
-        lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                h.clearCrimes()
-                h.addCrime(Crime(0L, getString(R.string.crime_1), getString(R.string.date_1),false,"Michale","929485739285"))
-                h.addCrime(Crime(1L, getString(R.string.crime_2), getString(R.string.date_2),false,"Killw","3457345234573"))
-                h.addCrime(Crime(2L, getString(R.string.crime_3), getString(R.string.date_3),false,"Hello","4567423452"))
-                h.addCrime(Crime(3L, getString(R.string.crime_4), getString(R.string.date_4),false,"World","2345756434234"))
-                h.addCrime(Crime(4L, getString(R.string.crime_5), getString(R.string.date_5),false,"Matv","732532452345"))
+
+            lifecycleScope.launch {
+                val crimes = withContext(Dispatchers.IO) {
+                    h.getAllCrimes()
+                }
+
+                if (crimes.isEmpty()) {
+                    findViewById<LinearLayout>(R.id.crime_list_container).visibility = View.GONE
+                    findViewById<TextView>(R.id.empty_message).visibility = View.VISIBLE
+                    findViewById<Button>(R.id.btn_add_crime).visibility = View.VISIBLE
+                } else {
+                    findViewById<LinearLayout>(R.id.crime_list_container).visibility = View.VISIBLE
+                    findViewById<TextView>(R.id.empty_message).visibility = View.GONE
+                    findViewById<Button>(R.id.btn_add_crime).visibility = View.GONE
+
+                    findViewById<LinearLayout>(R.id.crime1).setOnClickListener {
+                        openDetail(crimes[0].id, crimes[0].title, crimes[0].date)
+                    }
+                    findViewById<LinearLayout>(R.id.crime2).setOnClickListener {
+                        openDetail(crimes[0].id, crimes[0].title, crimes[0].date)
+                    }
+                    findViewById<LinearLayout>(R.id.crime3).setOnClickListener {
+                        openDetail(crimes[0].id, crimes[0].title, crimes[0].date)
+                    }
+                    findViewById<LinearLayout>(R.id.crime4).setOnClickListener {
+                        openDetail(crimes[0].id, crimes[0].title, crimes[0].date)
+                    }
+                    findViewById<LinearLayout>(R.id.crime5).setOnClickListener {
+                        openDetail(crimes[0].id, crimes[0].title, crimes[0].date)
+                    }
+
+                }
             }
 
+            findViewById<Button>(R.id.btn_add_crime).setOnClickListener {
+                lifecycleScope.launch {
+                    withContext(Dispatchers.IO) {
+                        val newCrime = Crime(
+                            id = System.currentTimeMillis(),
+                            title = "Новое преступление",
+                            date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()),
+                            isSolved = false,
+                            suspect = "",
+                            suspectPhone = ""
+                        )
+                        h.addCrime(newCrime)
+                    }
+                    recreate()
+                }
+            }
         }
-        findViewById<LinearLayout>(R.id.crime1).setOnClickListener {
-            openDetail(0L, getString(R.string.crime_1), getString(R.string.date_1))
-        }
-        findViewById<LinearLayout>(R.id.crime2).setOnClickListener {
-            openDetail(1L, getString(R.string.crime_2), getString(R.string.date_2))
-        }
-        findViewById<LinearLayout>(R.id.crime3).setOnClickListener {
-            openDetail(2L, getString(R.string.crime_3), getString(R.string.date_3))
-        }
-        findViewById<LinearLayout>(R.id.crime4).setOnClickListener {
-            openDetail(3L, getString(R.string.crime_4), getString(R.string.date_4))
-        }
-        findViewById<LinearLayout>(R.id.crime5).setOnClickListener {
-            openDetail(4L, getString(R.string.crime_5), getString(R.string.date_5))
-        }
-    }
+
     private fun openDetail(index: Long, title: String, date: String) {
         val pref = getSharedPreferences("crime", Context.MODE_PRIVATE)
         pref.edit().putLong(MainActivity.EXTRA_CRIME_ID, index)

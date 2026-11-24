@@ -8,12 +8,29 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="8dp">
+        <TextView
+            android:id="@+id/empty_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Нет преступлений"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:layout_marginTop="100dp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btn_add_crime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Добавить преступление"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
 
         <LinearLayout
+            android:id="@+id/crime_list_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
             <LinearLayout android:id="@+id/crime1" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@color/white" android:layout_margin="4dp" android:padding="16dp" android:clickable="true">
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/crime_1" android:textSize="16sp" android:textColor="@color/black" />
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/date_1" android:textSize="12sp" android:layout_marginTop="4dp" />
